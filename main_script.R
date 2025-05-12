@@ -56,7 +56,7 @@ uli_ode <- odin({
 # Prison model ------------------------------------------------------------
   
   deriv(U_p)  <- 
-    - U_p * (lambda_p + U_p) +
+    - U_p * (lambda_p + mu) +
     U   * r_incar - 
     U_p * r_release
   
@@ -92,10 +92,16 @@ uli_ode <- odin({
     L_p * slow_p 
   
   N       <- U + L + Ia + Is + R
+  
   N_p     <- U_p + L_p + Ia_p + Is_p + R_p
+  
   births  <- mu*(N+N_p) + mutb*(Is+Is_p) 
-  lambda  <- beta   * (Ia  +Is  )/N # force of infection
-  lambda_p<- beta_p * (Ia_p+Is_p)/N_p # force of infection prisons
+  
+  lambda  <- (1-mix_p*prob_inf_mix)*(beta   * (Ia  +Is  )/N) + 
+    mix_p*prob_inf_mix*(beta_p * (Ia_p+Is_p)/N_p) # force of infection
+  
+  lambda_p<- (1-mix_p*prob_inf_mix)*(beta_p * (Ia_p+Is_p)/N_p) + 
+    mix_p*prob_inf_mix*(beta * (Ia+Is)/N) # force of infection prisons
   
   # Known Model Parameters
   l_exp    <- 72              # Life expectancy
@@ -104,24 +110,25 @@ uli_ode <- odin({
   mutb     <- 0.5*(1/tb_dur)  # TB mortality rate
   self_cure<- 0.5*(1/tb_dur)  # recovery
   fast     <- 0.1             # Fraction fast progressing to active TB
-  slow     <- 0.05*1/l_exp    # Remote reactivation
+  slow     <- 0.0008          # Remote reactivation
   sigma    <- 1/0.5           # symptom development (6 mo)
-  fast_p   <- 0.18             # Fraction fast progressing to active TB
-  slow_p   <- 0.08*1/l_exp    # Remote reactivation
+  fast_p   <- 0.25            # Fraction fast progressing to active TB
+  slow_p   <- 0.0008          # Remote reactivation
   sigma_p  <- 1/0.33          # symptom development (4 mo)
   imm      <- 0.5             # Infectiousness decline (partial immunity)
-  r_tx     <- if (time > 950) 1*0.7*0.7 else 0#       # Careseeking rate (1 year)
-  r_tx_p   <- if (time > 950) prison_tx  else 0#       # Careseeking rate (1 year)
+  r_tx     <- if (time > 950) 1*0.87 else 0#       # Careseeking rate (1 year)
+  r_tx_p   <- if (time > 950) 0.5  else 0#       # Careseeking rate (1 year)
   I0       <- 1e-6
   P0       <- 250/1e5
   r_incar  <- 0.001          # rate of incarceration
   r_release<- 1/2.5          # rate of release (1/mean prison term)
+  mix_p    <- parameter(0.008) # fraction of contacts from prison  (1 to 5% from Liu2024Lancet)
+  prob_inf_mix<- 0.5       # probability of infection given short contact with external contactee
 
 
 # External inputs ---------------------------------------------------------
   beta     <-parameter(5)
   beta_p   <-parameter(5)
-  prison_tx <- parameter(0.49)
 
   
     
@@ -144,7 +151,8 @@ uli_ode <- odin({
 
 
 
-sys <- dust_system_create(uli_ode, pars = list(beta=4.5,beta_p=34.5))
+sys <- dust_system_create(uli_ode, 
+                          pars = list(beta=3,beta_p=18))
 
 dust_system_set_state_initial(sys)
 t <- seq(0, 1000)
@@ -173,7 +181,7 @@ plot(t , inc, type = "l",
      main = "Simulated TB incidence vs Paraguay estimate",
      xlim = c(950,1000),
      ylim = c(0,200))
-points(999,46,pch=19)
+points(999,62,pch=19)
 
 
 plot(t , inc_p, type = "l", 
@@ -191,6 +199,34 @@ plot(t , inc_p, type = "l",
      xlim = c(950,1000))
      #ylim = c(0,200))
 points(999,4200,pch=19)
+
+
+
+
+# Interventions -----------------------------------------------------------
+sys0<-sys
+y0<- dust_system_simulate(sys0, seq(1001,1050))
+y0 <- dust_unpack_state(sys, y0)
+totalpop <- y0$Is + y0$Ia + y0$U + y0$L + y0$R + y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
+prison_pop<-y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
+inc0<-c(inc[length(inc)],diff(y0$incidence)*1e5)
+inc_p0<-c(inc_p[length(inc_p)],(diff(y0$incidence_p)/prison_pop*1e5))
+
+plot(seq(1001,1050) ,inc0, type = "l", 
+     col="firebrick",
+     xlim = c(1002,1050),
+     ylim=c(0,60),
+     xlab = "Time", 
+     ylab = "Incidence per 100k")
+
+plot(seq(1001,1050) ,inc_p0, type = "l", 
+     col="navy", 
+     xlab = "Time", 
+     ylab = "Incidence per 100k",
+     main = "Simulated TB incidence  in prisons vs Paraguay estimate")
+
+
+
 
 
 
