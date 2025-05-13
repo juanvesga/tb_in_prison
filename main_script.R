@@ -33,19 +33,21 @@ uli_ode <- odin({
     L * slow - 
     Ia * (sigma + mu) - 
     Ia * r_incar + 
-    Ia_p * r_release
+    Ia_p * r_release *(1-screen_exit)
   
   deriv(Is) <- 
     Ia * sigma - 
     Is * (mutb + mu + self_cure + r_tx) - 
     Is * r_incar + 
-    Is_p * r_release
+    Is_p * r_release *(1-screen_exit)
   
   deriv(R)  <- 
     Is*(self_cure + r_tx) - 
     R * (imm*lambda + mu) - 
     R * r_incar + 
-    R_p * r_release
+    R_p * r_release +
+    Is_p * r_release * screen_exit +
+    Ia_p * r_release * screen_exit 
   
   deriv(incidence) <-  
     U * lambda * fast + 
@@ -71,20 +73,26 @@ uli_ode <- odin({
     U_p * lambda_p * fast_p + 
     R_p * (lambda_p * fast_p * imm) +  
     L_p * slow_p - Ia_p * (sigma_p + mu) + 
-    Ia * r_incar - 
-    Ia_p * r_release
+    Ia * r_incar * (1-screen_entry) - 
+    Ia_p * r_release -
+    Ia_p * screen_yearly
   
   deriv(Is_p) <- 
     Ia_p * sigma_p - 
     Is_p * (mutb + mu + self_cure + r_tx_p) + 
-    Is * r_incar - 
-    Is_p * r_release
+    Is * r_incar * (1-screen_entry) - 
+    Is_p * r_release -
+    Is_p * screen_yearly
   
   deriv(R_p)  <- 
     Is_p * (self_cure + r_tx_p) - 
     R_p * (imm*lambda_p + mu) + 
-    R * r_incar - 
-    R_p * r_release
+    R * r_incar +
+    Ia * r_incar * screen_entry +
+    Is * r_incar * screen_entry - 
+    R_p * r_release +
+    Ia_p * screen_yearly +
+    Is_p * screen_yearly
   
   deriv(incidence_p) <-  
     U_p * lambda_p * fast_p + 
@@ -122,13 +130,17 @@ uli_ode <- odin({
   P0       <- 250/1e5
   r_incar  <- 0.001          # rate of incarceration
   r_release<- 1/2.5          # rate of release (1/mean prison term)
-  mix_p    <- parameter(0.008) # fraction of contacts from prison  (1 to 5% from Liu2024Lancet)
+ 
   prob_inf_mix<- 0.5       # probability of infection given short contact with external contactee
 
 
 # External inputs ---------------------------------------------------------
-  beta     <-parameter(5)
-  beta_p   <-parameter(5)
+  beta          <-parameter(5)
+  beta_p        <-parameter(5)
+  mix_p         <- parameter(0.008) # fraction of contacts from prison  (1 to 5% from Liu2024Lancet)
+  screen_exit   <-parameter(0)
+  screen_entry  <-parameter(0)
+  screen_yearly <-parameter(0)
 
   
     
@@ -152,11 +164,12 @@ uli_ode <- odin({
 
 
 sys <- dust_system_create(uli_ode, 
-                          pars = list(beta=3,beta_p=18))
+                          pars = list(beta=3,beta_p=16))
 
 dust_system_set_state_initial(sys)
 t <- seq(0, 1000)
 y <- dust_system_simulate(sys, t)
+init_state0<-dust_system_state(sys)
 
 y <- dust_unpack_state(sys, y)
 
@@ -204,30 +217,70 @@ points(999,4200,pch=19)
 
 
 # Interventions -----------------------------------------------------------
-sys0<-sys
-y0<- dust_system_simulate(sys0, seq(1001,1050))
+
+# Baseline
+
+dust_system_set_time(sys, 1000)
+dust_system_set_state(sys,init_state0)
+
+
+y0<- dust_system_simulate(sys, seq(1000,1050))
 y0 <- dust_unpack_state(sys, y0)
 totalpop <- y0$Is + y0$Ia + y0$U + y0$L + y0$R + y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
 prison_pop<-y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
-inc0<-c(inc[length(inc)],diff(y0$incidence)*1e5)
-inc_p0<-c(inc_p[length(inc_p)],(diff(y0$incidence_p)/prison_pop*1e5))
+inc0  <-c(inc[length(inc)],diff(y0$incidence)*1e5)
+inc_p0<-c(inc_p[length(inc_p)],(diff(y0$incidence_p)/prison_pop[2:length(prison_pop)]*1e5))
 
-plot(seq(1001,1050) ,inc0, type = "l", 
+plot(seq(1000,1050) ,inc0, type = "l", 
      col="firebrick",
      xlim = c(1002,1050),
-     ylim=c(0,60),
+     ylim=c(0,80),
      xlab = "Time", 
      ylab = "Incidence per 100k")
 
-plot(seq(1001,1050) ,inc_p0, type = "l", 
+plot(seq(1000,1050) ,inc_p0, type = "l", 
      col="navy", 
+     ylim=c(0,5500),
      xlab = "Time", 
      ylab = "Incidence per 100k",
      main = "Simulated TB incidence  in prisons vs Paraguay estimate")
 
 
 
+# Baseline
+
+dust_system_set_time(sys, 1000)
+dust_system_set_state(sys,init_state0)
 
 
+dust_system_update_pars(sys, pars=list(
+  beta=3,
+  beta_p=16,
+  screen_exit = 0.8,
+  screen_entry = 0.8,
+  screen_yearly = 0.8))
+
+y1<- dust_system_simulate(sys, seq(1000,1050))
+
+y1 <- dust_unpack_state(sys, y1)
+
+totalpop <- y0$Is + y0$Ia + y0$U + y0$L + y0$R + y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
+prison_pop<-y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
+inc0  <-c(inc[length(inc)],diff(y1$incidence)*1e5)
+inc_p0<-c(inc_p[length(inc_p)],(diff(y1$incidence_p)/prison_pop[2:length(prison_pop)]*1e5))
+
+plot(seq(1000,1050) ,inc0, type = "l", 
+     col="firebrick",
+     xlim = c(1002,1050),
+     ylim=c(0,80),
+     xlab = "Time", 
+     ylab = "Incidence per 100k")
+
+plot(seq(1000,1050) ,inc_p0, type = "l", 
+     col="navy", 
+     ylim=c(0,5500),
+     xlab = "Time", 
+     ylab = "Incidence per 100k",
+     main = "Simulated TB incidence  in prisons vs Paraguay estimate")
 
 
