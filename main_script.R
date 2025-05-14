@@ -5,183 +5,42 @@ set.seed(42)
 library(odin2)
 library(dust2)
 library(monty)
+library(here)
+library(ggplot2)
+
+root<-here()
+
+# Call model script
+source(file.path(root,"functions","tb_model.R"))
 
 
-# deterministic model general population tb
-uli_ode <- odin({
-  
-
-# Community model ---------------------------------------------------------
-
-  deriv(U)  <- 
-    births - 
-    U * lambda - 
-    U * mu - 
-    U * r_incar + 
-    U_p * r_release
-  
-  deriv(L)  <- 
-    U * lambda * (1-fast) + 
-    R * (lambda * (1-fast) * imm) - 
-    L * (mu + slow) - 
-    L * r_incar + 
-    L_p * r_release
-  
-  deriv(Ia) <- 
-    U * lambda * fast + 
-    R * (lambda * fast * imm) + 
-    L * slow - 
-    Ia * (sigma + mu) - 
-    Ia * r_incar + 
-    Ia_p * r_release *(1-screen_exit)
-  
-  deriv(Is) <- 
-    Ia * sigma - 
-    Is * (mutb + mu + self_cure + r_tx) - 
-    Is * r_incar + 
-    Is_p * r_release *(1-screen_exit)
-  
-  deriv(R)  <- 
-    Is*(self_cure + r_tx) - 
-    R * (imm*lambda + mu) - 
-    R * r_incar + 
-    R_p * r_release +
-    Is_p * r_release * screen_exit +
-    Ia_p * r_release * screen_exit 
-  
-  deriv(incidence) <-  
-    U * lambda * fast + 
-    R * lambda * fast * imm +  
-    L * slow 
-  
-
-# Prison model ------------------------------------------------------------
-  
-  deriv(U_p)  <- 
-    - U_p * (lambda_p + mu) +
-    U   * r_incar - 
-    U_p * r_release
-  
-  deriv(L_p)  <- 
-    U_p * lambda_p * (1-fast_p) + 
-    R_p * (lambda_p * (1-fast_p) * imm) - 
-    L_p * (mu + slow_p) +
-    L * r_incar -
-    L_p * r_release
-  
-  deriv(Ia_p) <- 
-    U_p * lambda_p * fast_p + 
-    R_p * (lambda_p * fast_p * imm) +  
-    L_p * slow_p - Ia_p * (sigma_p + mu) + 
-    Ia * r_incar * (1-screen_entry) - 
-    Ia_p * r_release -
-    Ia_p * screen_yearly
-  
-  deriv(Is_p) <- 
-    Ia_p * sigma_p - 
-    Is_p * (mutb + mu + self_cure + r_tx_p) + 
-    Is * r_incar * (1-screen_entry) - 
-    Is_p * r_release -
-    Is_p * screen_yearly
-  
-  deriv(R_p)  <- 
-    Is_p * (self_cure + r_tx_p) - 
-    R_p * (imm*lambda_p + mu) + 
-    R * r_incar +
-    Ia * r_incar * screen_entry +
-    Is * r_incar * screen_entry - 
-    R_p * r_release +
-    Ia_p * screen_yearly +
-    Is_p * screen_yearly
-  
-  deriv(incidence_p) <-  
-    U_p * lambda_p * fast_p + 
-    R_p * lambda_p * fast_p * imm +  
-    L_p * slow_p 
-  
-  N       <- U + L + Ia + Is + R
-  
-  N_p     <- U_p + L_p + Ia_p + Is_p + R_p
-  
-  births  <- mu*(N+N_p) + mutb*(Is+Is_p) 
-  
-  lambda  <- (1-mix_p*prob_inf_mix)*(beta   * (Ia  +Is  )/N) + 
-    mix_p*prob_inf_mix*(beta_p * (Ia_p+Is_p)/N_p) # force of infection
-  
-  lambda_p<- (1-mix_p*prob_inf_mix)*(beta_p * (Ia_p+Is_p)/N_p) + 
-    mix_p*prob_inf_mix*(beta * (Ia+Is)/N) # force of infection prisons
-  
-  # Known Model Parameters
-  l_exp    <- 72              # Life expectancy
-  tb_dur    <- 3               # Duration of infectious period (years)
-  mu       <- 1/l_exp         # Background mortality rate
-  mutb     <- 0.5*(1/tb_dur)  # TB mortality rate
-  self_cure<- 0.5*(1/tb_dur)  # recovery
-  fast     <- 0.1             # Fraction fast progressing to active TB
-  slow     <- 0.0008          # Remote reactivation
-  sigma    <- 1/0.5           # symptom development (6 mo)
-  fast_p   <- 0.25            # Fraction fast progressing to active TB
-  slow_p   <- 0.0008          # Remote reactivation
-  sigma_p  <- 1/0.33          # symptom development (4 mo)
-  imm      <- 0.5             # Infectiousness decline (partial immunity)
-  r_tx     <- if (time > 950) 1*0.87 else 0#       # Careseeking rate (1 year)
-  r_tx_p   <- if (time > 950) 0.5  else 0#       # Careseeking rate (1 year)
-  I0       <- 1e-6
-  P0       <- 250/1e5
-  r_incar  <- 0.001          # rate of incarceration
-  r_release<- 1/2.5          # rate of release (1/mean prison term)
- 
-  prob_inf_mix<- 0.5       # probability of infection given short contact with external contactee
-
-
-# External inputs ---------------------------------------------------------
-  beta          <-parameter(5)
-  beta_p        <-parameter(5)
-  mix_p         <- parameter(0.008) # fraction of contacts from prison  (1 to 5% from Liu2024Lancet)
-  screen_exit   <-parameter(0)
-  screen_entry  <-parameter(0)
-  screen_yearly <-parameter(0)
-
-  
-    
-  initial(U) <- 1-I0-P0
-  initial(L) <- 0
-  initial(Ia) <- 0
-  initial(Is) <- I0
-  initial(R) <- 0
-  
-  initial(U_p) <- P0-(I0*P0)
-  initial(L_p) <- 0
-  initial(Ia_p) <- 0
-  initial(Is_p) <- I0*P0
-  initial(R_p) <- 0
-  
-  initial(incidence) <- 0 
-  initial(incidence_p) <- 0 
-  
-})
-
-
-
+# Create model object
 sys <- dust_system_create(uli_ode, 
                           pars = list(beta=3,beta_p=16))
 
+# Set default initial state of the model 
 dust_system_set_state_initial(sys)
+
+# Run simulation from time zero
 t <- seq(0, 1000)
 y <- dust_system_simulate(sys, t)
+
+# Get model state at the latest point for future simulations
 init_state0<-dust_system_state(sys)
 
 y <- dust_unpack_state(sys, y)
 
+names(init_state0)<-paste0(names(y))
+
 totalpop <- y$Is + y$Ia + y$U + y$L + y$R + y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
+
 prison_pop<-y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
 
 inc<-c(0,diff(y$incidence)*1e5)
 
 inc_p<-c(0,diff(y$incidence_p))/prison_pop*1e5
 
-
-
+# Plot baseline trajectories
 plot(t ,inc, type = "l", 
      col="firebrick", 
      xlab = "Time", 
@@ -215,72 +74,105 @@ points(999,4200,pch=19)
 
 
 
-
 # Interventions -----------------------------------------------------------
 
 # Baseline
 
-dust_system_set_time(sys, 1000)
-dust_system_set_state(sys,init_state0)
+pars<-list()
+
+runs0<-update_intervention(sys,1001,init_state0,10,pars,"Baseline")
+
+runs0$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs0$incidence_community)) *1e5 
+
+runs0$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs0$incidence_prison))/runs0$prison_pop*1e5 
+
+runs0$cases_averted<-0
+
+runs0$number_needed_screen<-0
 
 
-y0<- dust_system_simulate(sys, seq(1000,1050))
-y0 <- dust_unpack_state(sys, y0)
-totalpop <- y0$Is + y0$Ia + y0$U + y0$L + y0$R + y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
-prison_pop<-y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
-inc0  <-c(inc[length(inc)],diff(y0$incidence)*1e5)
-inc_p0<-c(inc_p[length(inc_p)],(diff(y0$incidence_p)/prison_pop[2:length(prison_pop)]*1e5))
+# Algorithm 1
+pars1=list(
+  screen_exit_a = 0.8,
+  screen_entry_a = 0.8,
+  screen_yearly_a = 0.8,
+  screen_exit_s = 0.8,
+  screen_entry_s = 0.8,
+  screen_yearly_s = 0.8
+)
 
-plot(seq(1000,1050) ,inc0, type = "l", 
-     col="firebrick",
-     xlim = c(1002,1050),
-     ylim=c(0,80),
-     xlab = "Time", 
-     ylab = "Incidence per 100k")
+runs1<-update_intervention(sys,1001,init_state0,10,pars1,"Algorithm 1")
 
-plot(seq(1000,1050) ,inc_p0, type = "l", 
-     col="navy", 
-     ylim=c(0,5500),
-     xlab = "Time", 
-     ylab = "Incidence per 100k",
-     main = "Simulated TB incidence  in prisons vs Paraguay estimate")
+runs1$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs1$incidence_community)) *1e5 
+
+runs1$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs1$incidence_prison))/runs0$prison_pop*1e5 
+
+runs1$cases_averted<-runs0$n_cummulative_tb_cases- runs1$n_cummulative_tb_cases
+
+runs1$number_needed_screen<-runs1$n_cummulative_screened/runs1$n_cumulative_detected
+
+# Algorithm 2
+pars2=list(
+  screen_exit_a = 0.7,
+  screen_entry_a = 0.7,
+  screen_yearly_a = 0.7,
+  screen_exit_s = 0.7,
+  screen_entry_s = 0.7,
+  screen_yearly_s = 0.7
+)
+
+runs2<-update_intervention(sys,1001,init_state0,10,pars2,"Algorithm 2")
+
+runs2$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs2$incidence_community)) *1e5 
+
+runs2$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs2$incidence_prison))/runs0$prison_pop*1e5 
+
+runs2$cases_averted<-runs0$n_cummulative_tb_cases- runs2$n_cummulative_tb_cases
+
+runs2$number_needed_screen<-runs2$n_cummulative_screened/runs2$n_cumulative_detected
 
 
+## TO ADD MORE SCENARIOS JUST COPY LINES ABOVE
 
-# Baseline
+# Join together all results 
+df<-rbind(runs0,runs1,runs2)
 
-dust_system_set_time(sys, 1000)
-dust_system_set_state(sys,init_state0)
+#Plot TB community 
+ggplot(df, aes(x=years,y=incidence_community_rate,colour = scenario))+
+  geom_line()+
+  labs(title = "TB incidence in the community", y="Incidence per 100,000")+
+  ylim(0,75)+
+  theme_minimal()
+
+#Plot TB prison 
+ggplot(df, aes(x=years,y=incidence_prison_rate,colour = scenario))+
+  geom_line()+
+  labs(title = "TB incidence in the prison", y="Incidence per 100,000")+
+  ylim(0,5e3)+
+  theme_minimal()
 
 
-dust_system_update_pars(sys, pars=list(
-  beta=3,
-  beta_p=16,
-  screen_exit = 0.8,
-  screen_entry = 0.8,
-  screen_yearly = 0.8))
+ggplot(df, aes(x=years,y=n_annual_detected,colour = scenario))+
+  geom_line()+
+  labs(title = "Annual TB cases detected", y="TB cases")+
+  ylim(0,800)+
+  theme_minimal()
 
-y1<- dust_system_simulate(sys, seq(1000,1050))
 
-y1 <- dust_unpack_state(sys, y1)
+ggplot(df, aes(x=years,y=cases_averted,colour = scenario))+
+  geom_line()+
+  labs(title = "Cumulative TB cases averted", y="TB cases")+
+  ylim(0,20000)+
+  theme_minimal()
 
-totalpop <- y0$Is + y0$Ia + y0$U + y0$L + y0$R + y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
-prison_pop<-y0$Is_p + y0$Ia_p + y0$U_p + y0$L_p + y0$R_p
-inc0  <-c(inc[length(inc)],diff(y1$incidence)*1e5)
-inc_p0<-c(inc_p[length(inc_p)],(diff(y1$incidence_p)/prison_pop[2:length(prison_pop)]*1e5))
 
-plot(seq(1000,1050) ,inc0, type = "l", 
-     col="firebrick",
-     xlim = c(1002,1050),
-     ylim=c(0,80),
-     xlab = "Time", 
-     ylab = "Incidence per 100k")
+ggplot(df, aes(x=years,y=number_needed_screen,colour = scenario))+
+  geom_line()+
+  labs(title = "Number needed to screen", y="Screened/detected")+
+  ylim(0,200)+
+  xlim(1,10)+
+  theme_minimal()
 
-plot(seq(1000,1050) ,inc_p0, type = "l", 
-     col="navy", 
-     ylim=c(0,5500),
-     xlab = "Time", 
-     ylab = "Incidence per 100k",
-     main = "Simulated TB incidence  in prisons vs Paraguay estimate")
+
 
 
