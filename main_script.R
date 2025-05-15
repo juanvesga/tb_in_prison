@@ -93,12 +93,12 @@ runs0$number_needed_screen<-0
 
 # Algorithm 1
 pars1=list(
-  screen_exit_a = 0.8,
-  screen_entry_a = 0.8,
-  screen_yearly_a = 0.8,
-  screen_exit_s = 0.8,
-  screen_entry_s = 0.8,
-  screen_yearly_s = 0.8
+  screen_exit_a = 0.818,
+  screen_entry_a = 0.818,
+  screen_yearly_a = 0.818,
+  screen_exit_s = 0.891,
+  screen_entry_s = 0.891,
+  screen_yearly_s = 0.891
 )
 
 runs1<-update_intervention(sys,1001,init_state0,10,pars1,"Algorithm 1")
@@ -113,12 +113,12 @@ runs1$number_needed_screen<-runs1$n_cummulative_screened/runs1$n_cumulative_dete
 
 # Algorithm 2
 pars2=list(
-  screen_exit_a = 0.7,
-  screen_entry_a = 0.7,
-  screen_yearly_a = 0.7,
-  screen_exit_s = 0.7,
-  screen_entry_s = 0.7,
-  screen_yearly_s = 0.7
+  screen_exit_a = 0.364,
+  screen_entry_a = 0.364,
+  screen_yearly_a = 0.364,
+  screen_exit_s = 0.882,
+  screen_entry_s = 0.882,
+  screen_yearly_s = 0.882
 )
 
 runs2<-update_intervention(sys,1001,init_state0,10,pars2,"Algorithm 2")
@@ -131,11 +131,49 @@ runs2$cases_averted<-runs0$n_cummulative_tb_cases- runs2$n_cummulative_tb_cases
 
 runs2$number_needed_screen<-runs2$n_cummulative_screened/runs2$n_cumulative_detected
 
+# Algorithm 3
+pars3=list(
+  screen_exit_a = 0.818,
+  screen_entry_a = 0.818,
+  screen_yearly_a = 0.818,
+  screen_exit_s = 0.765,
+  screen_entry_s = 0.765,
+  screen_yearly_s = 0.765
+)
 
-## TO ADD MORE SCENARIOS JUST COPY LINES ABOVE
+runs3<-update_intervention(sys,1001,init_state0,10,pars3,"Algorithm 3")
+
+runs3$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs3$incidence_community)) *1e5 
+
+runs3$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs3$incidence_prison))/runs0$prison_pop*1e5 
+
+runs3$cases_averted<-runs0$n_cummulative_tb_cases- runs3$n_cummulative_tb_cases
+
+runs3$number_needed_screen<-runs3$n_cummulative_screened/runs3$n_cumulative_detected
+
+# Algorithm 4
+pars4=list(
+  screen_exit_a = 0.364,
+  screen_entry_a = 0.364,
+  screen_yearly_a = 0.364,
+  screen_exit_s = 0.924,
+  screen_entry_s = 0.924,
+  screen_yearly_s = 0.924
+)
+
+runs4<-update_intervention(sys,1001,init_state0,10,pars4,"Algorithm 4")
+
+runs4$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs4$incidence_community)) *1e5 
+
+runs4$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs4$incidence_prison))/runs0$prison_pop*1e5 
+
+runs4$cases_averted<-runs0$n_cummulative_tb_cases- runs4$n_cummulative_tb_cases
+
+runs4$number_needed_screen<-runs4$n_cummulative_screened/runs4$n_cumulative_detected
+
 
 # Join together all results 
-df<-rbind(runs0,runs1,runs2)
+df<-rbind(runs0,runs1,runs2, runs3, runs4)
 
 #Plot TB community 
 ggplot(df, aes(x=years,y=incidence_community_rate,colour = scenario))+
