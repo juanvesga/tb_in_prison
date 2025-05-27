@@ -12,7 +12,7 @@ library(tidyr)
 root<-here()
 
 # Call model script5
-source(file.path(root,"functions","tb_model.R"))
+source(file.path(root,"functions","model with treatment attempt.R"))
 
 
 # Create model object
@@ -33,9 +33,9 @@ y <- dust_unpack_state(sys, y)
 
 names(init_state0)<-paste0(names(y))
 
-totalpop <- y$Is + y$Ia + y$U + y$L + y$R + y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
+totalpop <- y$Is + y$Ia + y$U + y$L + y$R + y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p + y$Tr + y$Tr_p
 
-prison_pop<-y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
+prison_pop<-y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p + y$Tr_p
 
 inc<-c(0,diff(y$incidence)*1e5)
 
@@ -373,6 +373,10 @@ ggplot(df, aes(x=years,y=number_needed_screen,colour = Scenario, linetype = Cove
   xlim(1,10)+
   theme_minimal()
 
-
+plot(t, totalpop, type = "l",
+     col="magenta",
+     xlab = "time",
+     ylab = "people",
+     main = "test")
 
 
