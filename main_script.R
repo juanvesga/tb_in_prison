@@ -11,7 +11,7 @@ library(ggplot2)
 root<-here()
 
 # Call model script
-source(file.path(root,"model with treatment attempt.R"))
+source(file.path(root,"v2 model.R"))
 
 
 # Create model object

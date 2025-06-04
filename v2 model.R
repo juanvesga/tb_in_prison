@@ -83,13 +83,13 @@ uli_ode <- odin({
   
   deriv(Is_p) <- 
     Ia_p * sigma_p - 
-    Is_p * (mutb + mu + self_cure + (tx_iniation_delay_p * case_detection_p)) + 
+    Is_p * (mutb + mu + self_cure + (tx_initiation_delay_p * case_detection_p)) + 
     Is * r_incar * (1-screen_entry_s) - 
     Is_p * r_release -
     Is_p * screen_yearly_s * screen_delay
   
   deriv(Tr_p) <-
-    Is_p * tx_iniation_delay_p * case_detection_p -
+    Is_p * tx_initiation_delay_p * case_detection_p -
     Tr_p * mu -
     Tr_p * tx_duration +
     Tr * r_incar -
@@ -125,7 +125,7 @@ uli_ode <- odin({
     Ia_p * screen_yearly_a +
     Is_p * screen_yearly_s +
     Is_p * r_release * screen_exit_s +
-    Ia_p * r_release * screen_exit_a 
+    Ia_p * r_release * screen_exit_a  
   
   
   # Population and force of infection ---------------------------------------
@@ -164,12 +164,12 @@ uli_ode <- odin({
   prob_inf_mix       <- 0.5  # probability of infection given short contact with external contactee
   case_detection     <- if (time > 950) 0.87 else 0#    # case detection rate
   case_detection_p   <- if (time > 950) 0.53 else 0#    # case detection rate
-  tx_initiation_delay<- if (time > 950) 1 else 0#  # treatment initiation delay
-  tx_iniation_delay_p<- if (time > 950) 1 else 0#  # treatment initiation delay
-  tx_completion      <- if (time > 950) 1 else 0#     # fraction of people completing treatment 
-  tx_duration        <- if (time > 950) 1 else 0# # duration treatment 184 days
-  tx_forgiveness     <- if (time > 950) 1 else 0#     # fraction recovering although not completing treatment
-  screen_delay       <- if (time > 1001) 1 else 0# # delay of starting treatment after screening 7 days
+  tx_initiation_delay<- if (time > 950) 1/0.21 else 0#  # treatment initiation delay
+  tx_initiation_delay_p<- if (time > 950) 1/0.27 else 0#  # treatment initiation delay
+  tx_completion      <- if (time > 950) 0.8 else 0#     # fraction of people completing treatment 
+  tx_duration        <- if (time > 950) 1/0.504 else 0# # duration treatment 184 days
+  tx_forgiveness     <- if (time > 950) 0.5 else 0#     # fraction recovering although not completing treatment
+  screen_delay       <- if (time > 1000) 1 else 0# # delay of starting treatment after screening 7 days
   
   
   # External inputs ---------------------------------------------------------
