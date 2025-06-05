@@ -30,7 +30,8 @@ uli_ode <- odin({
   
   deriv(Is) <- 
     Ia * sigma - 
-    Is * (mutb + mu + self_cure + (tx_initiation_delay*case_detection)) - 
+    Is * (mutb + mu + self_cure) - 
+    Is * tx_initiation_delay * case_detection -
     Is * r_incar + 
     Is_p * r_release *(1-screen_exit_s)
   
@@ -42,7 +43,7 @@ uli_ode <- odin({
     Sd * r_incar
   
   deriv(Tr) <-
-    Is * tx_initiation_delay * case_detection -
+    Is * tx_initiation_delay * case_detection - 
     Tr * tx_duration -
     Tr * mu -
     Tr * r_incar + 
@@ -66,8 +67,8 @@ uli_ode <- odin({
   # Prison model ------------------------------------------------------------
   
   deriv(U_p)  <- 
-    - U_p * (lambda_p + mu) +
     U   * r_incar - 
+    U_p * (lambda_p + mu) -
     U_p * r_release
   
   deriv(L_p)  <- 
@@ -89,7 +90,8 @@ uli_ode <- odin({
   
   deriv(Is_p) <- 
     Ia_p * sigma_p - 
-    Is_p * (mutb + mu + self_cure + (tx_initiation_delay_p * case_detection_p)) + 
+    Is_p * (mutb + mu + self_cure)+
+    Is_p * tx_initiation_delay_p * case_detection_p + 
     Is * r_incar * (1-screen_entry_s) - 
     Is_p * r_release -
     Is_p * screen_yearly_s 
