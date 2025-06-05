@@ -95,8 +95,8 @@ uli_ode <- odin({
   deriv(Sd_p) <- 
     Ia_p * screen_yearly_a +
     Is_p * screen_yearly_s +
-    Is * r_release * screen_exit_s + 
-    Ia * r_release * screen_exit_a -
+    Is * r_incar * screen_entry_s + 
+    Ia * r_incar * screen_entry_a -
     Sd_p * screen_delay
   
   deriv(Tr_p) <-
