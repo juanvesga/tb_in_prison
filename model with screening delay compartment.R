@@ -62,7 +62,6 @@ uli_ode <- odin({
     R * lambda * fast * imm +  
     L * slow 
   
-  
   # Prison model ------------------------------------------------------------
   
   deriv(U_p)  <- 
