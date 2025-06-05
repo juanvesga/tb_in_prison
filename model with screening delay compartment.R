@@ -37,7 +37,9 @@ uli_ode <- odin({
   deriv(Sd) <- 
     Is_p * r_release * screen_exit_s + 
     Ia_p * r_release * screen_exit_a -
-    Sd * screen_delay
+    Sd * screen_delay +
+    Sd_p * r_release -
+    Sd * r_incar
   
   deriv(Tr) <-
     Is * tx_initiation_delay * case_detection -
@@ -97,7 +99,9 @@ uli_ode <- odin({
     Is_p * screen_yearly_s +
     Is * r_incar * screen_entry_s + 
     Ia * r_incar * screen_entry_a -
-    Sd_p * screen_delay
+    Sd_p * screen_delay - 
+    Sd_p * r_release +
+    Sd * r_incar
   
   deriv(Tr_p) <-
     Is_p * tx_initiation_delay_p * case_detection_p -
