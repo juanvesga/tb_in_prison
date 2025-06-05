@@ -16,7 +16,7 @@ source(file.path(root,"model with screening delay compartment.R"))
 
 # Create model object
 sys <- dust_system_create(uli_ode, 
-                          pars = list(beta=3,beta_p=16))
+                          pars = list(beta=3,beta_p=22))
 
 # Set default initial state of the model 
 dust_system_set_state_initial(sys)
@@ -70,7 +70,7 @@ plot(t , inc_p, type = "l",
      main = "Simulated TB incidence  in prisons vs Paraguay estimate",
      xlim = c(950,1000))
 #ylim = c(0,200))
-points(999,4200,pch=19)
+points(999,4729,pch=19)
 
 
 
@@ -186,7 +186,7 @@ ggplot(df, aes(x=years,y=incidence_community_rate,colour = scenario))+
 ggplot(df, aes(x=years,y=incidence_prison_rate,colour = scenario))+
   geom_line()+
   labs(title = "TB incidence in the prison", y="Incidence per 100,000")+
-  ylim(0,5e3)+
+  ylim(0,6e3)+
   theme_minimal()
 
 

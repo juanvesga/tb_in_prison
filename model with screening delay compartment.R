@@ -163,10 +163,10 @@ uli_ode <- odin({
   mutb     <- 0.5*(1/tb_dur) # TB mortality rate
   self_cure<- 0.5*(1/tb_dur) # recovery
   fast     <- 0.1            # Fraction fast progressing to active TB
-  slow     <- 0.0008         # Remote reactivation
+  slow     <- 0.001         # Remote reactivation
   sigma    <- 1/0.5          # symptom development (6 mo)
   fast_p   <- 0.25           # Fraction fast progressing to active TB
-  slow_p   <- 0.0008         # Remote reactivation
+  slow_p   <- 0.0025        # Remote reactivation
   sigma_p  <- 1/0.33         # symptom development (4 mo)
   imm      <- 0.5            # Infectiousness decline (partial immunity)
   I0       <- 1e-6
