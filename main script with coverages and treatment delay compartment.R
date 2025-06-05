@@ -12,12 +12,12 @@ library(tidyr)
 root<-here()
 
 # Call model script5
-source(file.path(root,"functions","tb_model.R"))
+source(file.path(root,"model with screening delay compartment.R"))
 
 
 # Create model object
 sys <- dust_system_create(uli_ode, 
-                          pars = list(beta=3,beta_p=16))
+                          pars = list(beta=3,beta_p=22))
 
 # Set default initial state of the model 
 dust_system_set_state_initial(sys)
@@ -33,9 +33,9 @@ y <- dust_unpack_state(sys, y)
 
 names(init_state0)<-paste0(names(y))
 
-totalpop <- y$Is + y$Ia + y$U + y$L + y$R + y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
+totalpop <- y$Is + y$Ia + y$U + y$L + y$R + y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p + y$Tr + y$Tr_p + y$Sd_p + y$Sd
 
-prison_pop<-y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p
+prison_pop<-y$Is_p + y$Ia_p + y$U_p + y$L_p + y$R_p + y$Tr_p + y$Sd_p
 
 inc<-c(0,diff(y$incidence)*1e5)
 
@@ -71,7 +71,7 @@ plot(t , inc_p, type = "l",
      main = "Simulated TB incidence  in prisons vs Paraguay estimate",
      xlim = c(950,1000))
 #ylim = c(0,200))
-points(999,4200,pch=19)
+points(999,4729,pch=19)
 
 
 
