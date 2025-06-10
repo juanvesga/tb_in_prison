@@ -342,7 +342,7 @@ pars13=list(
   screen_yearly_s = 0.924 * 0.093
 )
 
-runs13<-update_intervention(sys,1001,init_state0,10,pars13,"Algorithm paraguay")
+runs13<-update_intervention(sys,1001,init_state0,10,pars13,"Algorithm paraguay_100%")
 
 runs13$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs13$incidence_community)) *1e5 
 
@@ -449,7 +449,7 @@ ggplot(df, aes(x=years,y=cases_averted,colour = Scenario, linetype = Coverage))+
 ggplot(df, aes(x=years,y=number_needed_screen,colour = Scenario, linetype = Coverage))+
   geom_line()+
   labs(title = "Number needed to screen", y="Screened/detected")+
-  ylim(0,200)+
+  ylim(0,1000)+
   xlim(1,10)+
   theme_minimal()
 
