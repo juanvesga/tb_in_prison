@@ -332,8 +332,88 @@ runs12$cases_averted<-runs0$n_cummulative_tb_cases- runs12$n_cummulative_tb_case
 
 runs12$number_needed_screen<-runs12$n_cummulative_screened/runs12$n_cumulative_detected
 
+# Algorithm paraguay
+pars13=list(
+  screen_exit_a = 0.818 * 0.093,
+  screen_entry_a = 0.818 * 0.093,
+  screen_yearly_a = 0.818 * 0.093,
+  screen_exit_s = 0.924 * 0.093,
+  screen_entry_s = 0.924 * 0.093,
+  screen_yearly_s = 0.924 * 0.093
+)
+
+runs13<-update_intervention(sys,1001,init_state0,10,pars13,"Algorithm paraguay")
+
+runs13$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs13$incidence_community)) *1e5 
+
+runs13$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs13$incidence_prison))/runs0$prison_pop*1e5 
+
+runs13$cases_averted<-runs0$n_cummulative_tb_cases- runs13$n_cummulative_tb_cases
+
+runs13$number_needed_screen<-runs13$n_cummulative_screened/runs13$n_cumulative_detected
+
+#algorithm 6 with 100% coverage
+pars14=list(
+  screen_exit_a = 0.818,
+  screen_entry_a = 0.818,
+  screen_yearly_a = 0.818,
+  screen_exit_s = 0.924,
+  screen_entry_s = 0.924,
+  screen_yearly_s = 0.924
+)
+
+runs14<-update_intervention(sys,1001,init_state0,10,pars14,"Algorithm6_100%")
+
+runs14$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs14$incidence_community)) *1e5 
+
+runs14$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs14$incidence_prison))/runs0$prison_pop*1e5 
+
+runs14$cases_averted<-runs0$n_cummulative_tb_cases- runs14$n_cummulative_tb_cases
+
+runs14$number_needed_screen<-runs14$n_cummulative_screened/runs14$n_cumulative_detected
+
+#algorithm 6 with 75% coverage
+pars15=list(
+  screen_exit_a = 0.818 * 0.75,
+  screen_entry_a = 0.818 * 0.75,
+  screen_yearly_a = 0.818 * 0.75,
+  screen_exit_s = 0.924 * 0.75,
+  screen_entry_s = 0.924 * 0.75,
+  screen_yearly_s = 0.924 * 0.75
+)
+
+runs15<-update_intervention(sys,1001,init_state0,10,pars15,"Algorithm6_75%")
+
+runs15$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs15$incidence_community)) *1e5 
+
+runs15$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs15$incidence_prison))/runs0$prison_pop*1e5 
+
+runs15$cases_averted<-runs0$n_cummulative_tb_cases- runs15$n_cummulative_tb_cases
+
+runs15$number_needed_screen<-runs15$n_cummulative_screened/runs15$n_cumulative_detected
+
+#algorithm 6 with 50% coverage
+pars16=list(
+  screen_exit_a = 0.818 * 0.5,
+  screen_entry_a = 0.818 * 0.5,
+  screen_yearly_a = 0.818 * 0.5,
+  screen_exit_s = 0.924 * 0.5,
+  screen_entry_s = 0.924 * 0.5,
+  screen_yearly_s = 0.924 * 0.5
+)
+
+runs16<-update_intervention(sys,1001,init_state0,10,pars16,"Algorithm6_50%")
+
+runs16$incidence_community_rate<-diff( c(y$incidence[length(y$incidence)-1],runs16$incidence_community)) *1e5 
+
+runs16$incidence_prison_rate<-diff( c(y$incidence_p[length(y$incidence_p)-1],runs16$incidence_prison))/runs0$prison_pop*1e5 
+
+runs16$cases_averted<-runs0$n_cummulative_tb_cases- runs16$n_cummulative_tb_cases
+
+runs16$number_needed_screen<-runs16$n_cummulative_screened/runs16$n_cumulative_detected
+
 # Join together all results 
-df<-rbind(runs0,runs1,runs2,runs3, runs4, runs5, runs6, runs7,runs8,runs9,runs10,runs11,runs12)
+df<-rbind(runs0,runs1,runs2,runs3, runs4, runs5, runs6, runs7,runs8,runs9,runs10,runs11,runs12,runs13, runs14, runs15, runs16)
 df<- df %>%
   separate(scenario, into = c("Scenario", "Coverage"), sep = "_")
 
