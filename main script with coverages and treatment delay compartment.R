@@ -41,6 +41,9 @@ inc<-c(0,diff(y$incidence)*1e5)
 
 inc_p<-c(0,diff(y$incidence_p))/prison_pop*1e5
 
+prev_p<-1e2*(y$Is_p + y$Ia_p + y$Tr_p)/prison_pop 
+
+
 # Plot baseline trajectories
 plot(t ,inc, type = "l", 
      col="firebrick", 
@@ -73,7 +76,14 @@ plot(t , inc_p, type = "l",
 #ylim = c(0,200))
 points(999,4729,pch=19)
 
-
+plot(t , prev_p, type = "l", 
+     col="orange3", 
+     xlab = "Time", 
+     ylab = "Active TB prevalence (%)",
+     main = "Simulated TB prevalence in prisons vs Cross-sectional estimate in Paraguay prisons",
+     xlim = c(950,1000),
+     ylim = c(0,15))
+points(999,6,pch=19)
 
 # Interventions -----------------------------------------------------------
 
