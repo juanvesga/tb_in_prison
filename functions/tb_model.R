@@ -135,7 +135,7 @@ uli_ode <- odin({
   slow_p   <- 0.0008          # Remote reactivation
   sigma_p  <- 1/0.33          # symptom development (4 mo)
   imm      <- 0.5             # Infectiousness decline (partial immunity)
-  r_tx     <- if (time > 950) 1*0.87 else 0#       # Careseeking rate (1 year)
+  r_tx     <- if (time > 950) 0.87 else 0#       # Careseeking rate (1 year)
   r_tx_p   <- if (time > 950) 0.5  else 0#       # Careseeking rate (1 year)
   I0       <- 1e-6
   P0       <- 250/1e5
