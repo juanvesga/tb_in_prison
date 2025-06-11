@@ -259,7 +259,7 @@ update_intervention<-function(mod,start_t,state0,run_t,param,label){
     prison_pop             = prison_pop,
     incidence_community    = y0$incidence,
     incidence_prison       = y0$incidence_p,
-    prevalence_prison      = 1e2*(y0$Is_p + y0$Ia_p + y0$Tr_p)/prison_pop 
+    prevalence_prison      = 1e2*(y0$Is_p + y0$Ia_p + y0$Tr_p)/prison_pop, 
     n_annual_screened      = 6.8e6*(c(0,diff(y0$new_released+y0$new_imprisoned)) + prison_pop),
     n_cummulative_screened = cumsum(6.8e6*(c(0,diff(y0$new_released+y0$new_imprisoned)) + prison_pop)),
     n_annual_detected      = 6.8e6*(c(0,diff(y0$new_detected))),

@@ -83,7 +83,7 @@ plot(t , prev_p, type = "l",
      main = "Simulated TB prevalence in prisons vs Cross-sectional estimate in Paraguay prisons",
      xlim = c(950,1000),
      ylim = c(0,15))
-points(999,6,pch=19)
+points(999,6.478,pch=19)
 
 # Interventions -----------------------------------------------------------
 
